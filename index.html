@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hifz Schedule Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1f2937;
+    --border: #2d3748;
+    --gold: #d4af6a;
+    --gold-soft: #c4903a;
+    --green: #4ade80;
+    --green-dim: #166534;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --accent: #38bdf8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    min-height: 100vh;
+    padding: 20px 16px 60px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+    padding-top: 10px;
+  }
+
+  .arabic-title {
+    font-family: 'Amiri', serif;
+    font-size: 2.2rem;
+    color: var(--gold);
+    letter-spacing: 0.02em;
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+
+  .sub-title {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .divider {
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 12px auto;
+  }
+
+  /* Stats Row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 10px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--gold);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 3px;
+  }
+
+  /* Progress Bar */
+  .progress-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .progress-bar-bg {
+    background: var(--surface2);
+    border-radius: 100px;
+    height: 10px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-soft), var(--gold));
+    border-radius: 100px;
+    transition: width 0.5s ease;
+  }
+
+  /* Today Card */
+  .today-card {
+    background: linear-gradient(135deg, #1a1f2e, #1f2a1a);
+    border: 1px solid var(--gold-soft);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .today-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .today-heading {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+
+  .today-new-page {
+    background: var(--green-dim);
+    border: 1px solid var(--green);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .badge {
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 100px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .badge-new {
+    background: var(--green);
+    color: #000;
+  }
+
+  .badge-rev {
+    background: var(--accent);
+    color: #000;
+  }
+
+  .page-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  .revision-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .rev-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--accent);
+  }
+
+  .rev-chip.dropped {
+    opacity: 0.3;
+    text-decoration: line-through;
+    color: var(--muted);
+  }
+
+  /* Section heading */
+  .section-heading {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 10px;
+    padding-left: 2px;
+  }
+
+  /* Schedule Table */
+  .schedule-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .schedule-scroll {
+    overflow-x: auto;
+    max-height: 360px;
+    overflow-y: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+  }
+
+  thead th {
+    background: var(--surface2);
+    color: var(--muted);
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.7rem;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  tbody tr {
+    border-top: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  tbody tr:hover {
+    background: var(--surface2);
+  }
+
+  tbody tr.today-row {
+    background: rgba(212, 175, 106, 0.08);
+    border-left: 3px solid var(--gold);
+  }
+
+  tbody tr.done-row {
+    opacity: 0.45;
+  }
+
+  td {
+    padding: 9px 12px;
+    vertical-align: middle;
+  }
+
+  .day-num {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--gold);
+  }
+
+  .pages-cell {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+  }
+
+  .new-cell {
+    font-family: 'DM Mono', monospace;
+    color: var(--green);
+    font-weight: 600;
+  }
+
+  /* Input controls */
+  .controls {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  .control-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  label {
+    font-size: 0.8rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  input[type="number"], input[type="date"] {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 8px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    width: 110px;
+    outline: none;
+  }
+
+  input[type="number"]:focus, input[type="date"]:focus {
+    border-color: var(--gold-soft);
+  }
+
+  .btn {
+    background: var(--gold-soft);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .btn:hover { background: var(--gold); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  /* Mark done button */
+  .mark-btn {
+    background: transparent;
+    border: 1px solid var(--green-dim);
+    color: var(--green);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    transition: all 0.15s;
+  }
+
+  .mark-btn:hover {
+    background: var(--green-dim);
+  }
+
+  .mark-btn.done-btn {
+    background: var(--green-dim);
+    color: var(--green);
+    border-color: var(--green);
+  }
+
+  /* Tip box */
+  .tip-box {
+    background: rgba(56, 189, 248, 0.07);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 0.78rem;
+    color: #94a3b8;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .tip-box strong {
+    color: var(--accent);
+  }
+
+  /* Motivational */
+  .hadith-box {
+    text-align: center;
+    padding: 16px;
+    border-top: 1px solid var(--border);
+    margin-top: 10px;
+  }
+
+  .hadith-arabic {
+    font-family: 'Amiri', serif;
+    font-size: 1.1rem;
+    color: var(--gold);
+    line-height: 1.8;
+    margin-bottom: 6px;
+  }
+
+  .hadith-trans {
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="arabic-title">مُتَابَعَةُ الحِفْظ</div>
+  <div class="divider"></div>
+  <div class="sub-title">Hifz Daily Schedule Tracker</div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+  <div class="section-heading">Settings</div>
+  <div class="control-row">
+    <label>Start Page:</label>
+    <input type="number" id="startPage" value="1" min="1" max="604">
+    <label>Start Date:</label>
+    <input type="date" id="startDate">
+    <button class="btn" onclick="generate()">Generate</button>
+    <button class="btn btn-secondary" onclick="resetProgress()">Reset</button>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-num" id="statDay">1</div>
+    <div class="stat-label">Today (Day)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" id="statPagesDone">0</div>
+    <div class="stat-label">Pages Memorized</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" id="statPercent">0%</div>
+    <div class="stat-label">Quran Done</div>
+  </div>
+</div>
+
+<!-- Progress -->
+<div class="progress-wrap">
+  <div class="progress-label">
+    <span>Progress</span>
+    <span id="progressText">Page 1 of 604</span>
+  </div>
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progressFill" style="width: 0%"></div>
+  </div>
+</div>
+
+<!-- Today Card -->
+<div class="today-card" id="todayCard">
+  <div class="today-heading">📅 Aaj Ka Plan</div>
+  <div class="today-new-page" id="todayNewPage">
+    <span class="badge badge-new">Hifz</span>
+    <span class="page-num" id="todayNewPageNum">Page 1</span>
+    <span style="font-size:0.75rem; color: var(--muted)">— Naazra + Hifz karein</span>
+  </div>
+  <div style="font-size:0.75rem; color: var(--muted); margin-bottom: 6px; margin-top: 4px;">
+    <span class="badge badge-rev" style="margin-right: 6px;">Revision</span> In pages ko dohraaein:
+  </div>
+  <div class="revision-list" id="todayRevPages"></div>
+</div>
+
+<!-- Tip -->
+<div class="tip-box">
+  <strong>Method:</strong> Roz 1 naya page hifz karo. Phir pichle 9 pages revise karo (total 10 pages/day). Jab window 10 tak pohonche, pehla page "drop" ho jata hai — woh ab aapke hifz mein set hai ✓
+</div>
+
+<!-- Schedule Table -->
+<div class="section-heading">Full Schedule</div>
+<div class="schedule-wrap">
+  <div class="schedule-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Day</th>
+          <th>Date</th>
+          <th>New Page</th>
+          <th>Revision (9 pages)</th>
+          <th>Done?</th>
+        </tr>
+      </thead>
+      <tbody id="scheduleBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Hadith -->
+<div class="hadith-box">
+  <div class="hadith-arabic">«خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ»</div>
+  <div class="hadith-trans">Tumhara behtar woh hai jo Quran seekhe aur sikhaye — Sahih Bukhari</div>
+</div>
+
+<script>
+const TOTAL_PAGES = 604;
+let schedule = [];
+let done = JSON.parse(localStorage.getItem('hifz_done') || '[]');
+let startPage = 1;
+let startDateObj = new Date();
+
+function formatDate(d) {
+  return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit', weekday: 'short' });
+}
+
+function generate() {
+  startPage = parseInt(document.getElementById('startPage').value) || 1;
+  const dateVal = document.getElementById('startDate').value;
+  startDateObj = dateVal ? new Date(dateVal) : new Date();
+
+  schedule = [];
+  const totalNew = TOTAL_PAGES - startPage + 1;
+
+  for (let i = 0; i < totalNew; i++) {
+    const day = i + 1;
+    const newPage = startPage + i;
+    const date = new Date(startDateObj);
+    date.setDate(startDateObj.getDate() + i);
+
+    // Revision: last 9 pages before this new page
+    const revPages = [];
+    for (let r = 1; r <= 9; r++) {
+      const p = newPage - r;
+      if (p >= startPage) revPages.unshift(p);
+    }
+
+    schedule.push({ day, date, newPage, revPages });
+  }
+
+  renderTable();
+  updateToday();
+  updateStats();
+  localStorage.setItem('hifz_schedule_start', JSON.stringify({ startPage, startDate: startDateObj.toISOString() }));
+}
+
+function renderTable() {
+  const tbody = document.getElementById('scheduleBody');
+  tbody.innerHTML = '';
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  schedule.forEach(row => {
+    const d = new Date(row.date); d.setHours(0,0,0,0);
+    const isToday = d.getTime() === today.getTime();
+    const isPast = d < today;
+    const isDone = done.includes(row.day);
+    const tr = document.createElement('tr');
+    if (isToday) tr.className = 'today-row';
+    if (isDone || (isPast && !isToday)) tr.classList.add('done-row');
+
+    const revStr = row.revPages.length ? row.revPages.join(', ') : '—';
+
+    tr.innerHTML = `
+      <td class="day-num">${row.day}</td>
+      <td style="font-size:0.75rem; color:var(--muted)">${formatDate(row.date)}</td>
+      <td class="new-cell">${row.newPage}</td>
+      <td class="pages-cell">${revStr}</td>
+      <td>
+        <button class="mark-btn ${isDone ? 'done-btn' : ''}" onclick="toggleDone(${row.day}, this)">
+          ${isDone ? '✓ Done' : 'Mark'}
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Scroll to today
+  setTimeout(() => {
+    const todayRow = tbody.querySelector('.today-row');
+    if (todayRow) todayRow.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, 100);
+}
+
+function updateToday() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayEntry = schedule.find(r => {
+    const d = new Date(r.date); d.setHours(0,0,0,0);
+    return d.getTime() === today.getTime();
+  });
+
+  if (!todayEntry) {
+    // Show first day if today is before start
+    const first = schedule[0];
+    if (first) {
+      document.getElementById('todayNewPageNum').textContent = 'Page ' + first.newPage;
+      renderRevChips(first.revPages);
+    }
+    return;
+  }
+
+  document.getElementById('todayNewPageNum').textContent = 'Page ' + todayEntry.newPage;
+  renderRevChips(todayEntry.revPages);
+  document.getElementById('statDay').textContent = todayEntry.day;
+}
+
+function renderRevChips(revPages) {
+  const container = document.getElementById('todayRevPages');
+  container.innerHTML = '';
+  if (!revPages.length) {
+    container.innerHTML = '<span style="font-size:0.75rem; color:var(--muted)">Koi nahi (Day 1)</span>';
+    return;
+  }
+  revPages.forEach(p => {
+    const chip = document.createElement('div');
+    chip.className = 'rev-chip';
+    chip.textContent = 'P' + p;
+    container.appendChild(chip);
+  });
+}
+
+function updateStats() {
+  const pagesDone = done.length;
+  document.getElementById('statPagesDone').textContent = pagesDone;
+  const pct = Math.round((pagesDone / TOTAL_PAGES) * 100);
+  document.getElementById('statPercent').textContent = pct + '%';
+  const currentPage = startPage + pagesDone - 1;
+  document.getElementById('progressText').textContent = 'Page ' + Math.max(startPage, currentPage) + ' of 604';
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function toggleDone(day, btn) {
+  if (done.includes(day)) {
+    done = done.filter(d => d !== day);
+    btn.textContent = 'Mark';
+    btn.classList.remove('done-btn');
+    btn.closest('tr').classList.remove('done-row');
+  } else {
+    done.push(day);
+    btn.textContent = '✓ Done';
+    btn.classList.add('done-btn');
+    btn.closest('tr').classList.add('done-row');
+  }
+  localStorage.setItem('hifz_done', JSON.stringify(done));
+  updateStats();
+}
+
+function resetProgress() {
+  if (!confirm('Saari progress reset karein?')) return;
+  done = [];
+  localStorage.removeItem('hifz_done');
+  renderTable();
+  updateStats();
+}
+
+// Init
+window.onload = () => {
+  const today = new Date();
+  document.getElementById('startDate').valueAsDate = today;
+
+  const saved = localStorage.getItem('hifz_schedule_start');
+  if (saved) {
+    const { startPage: sp, startDate: sd } = JSON.parse(saved);
+    document.getElementById('startPage').value = sp;
+    document.getElementById('startDate').value = new Date(sd).toISOString().split('T')[0];
+  }
+
+  generate();
+};
+</script>
+</body>
+</html>
+
